@@ -36,7 +36,7 @@ const userSchema = new Schema(
     },
     watchHistory:[
       {
-        types: Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: "Video"
       }
     ],
@@ -53,13 +53,12 @@ const userSchema = new Schema(
   }
 );
 
-//becrypt the password besfore saving the user
-userSchema.pre("save", async function (next){
-  if(!this.isModified("password")) return next()
+//bcrypt the password besfore saving the user
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
 
-  this.password = bcrypt.hash(this.password, 20)
-  next()
-})
+  this.password = await bcrypt.hash(this.password, 10);
+});
 
 //check password when importing User 
 userSchema.methods.isPasswordCorrect = async function(password){
