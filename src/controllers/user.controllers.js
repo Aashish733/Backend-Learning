@@ -6,14 +6,18 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { access } from "node:fs";
 
 const generateAccessAndRefreshTokens = async(userId)=>{
+  // console.log(userId)
   try {
-    const user  =await User.findById(userId)
+    const user = await User.findById(userId)
+    // console.log(user)
     const accessToken = user.generateAccessToken()
     const refreshToken = user.generateRefreshToken()
+    // console.log("accessToken ", accessToken)
+    // console.log("refreshToken ", refreshToken)
     user.refreshToken = refreshToken;
     await user.save({validateBeforeSave: false})
 
-    return {accesstoken, refreshtoken}
+    return {accessToken, refreshToken}
   } catch (error) {
     throw new ApiError(500, "Something went wrong while generating access and refresh token")
   }
@@ -76,8 +80,9 @@ const registerUser  = asyncHandler(async(req, res)=> {
 const loginUser = asyncHandler(async(req, res)=> {
   //req body = data
   const {username, email, password} = req.body;
+  // console.log(email)
 
-  if(!username || !email){
+  if(!username && !email){
     throw new ApiError(400, "username or email is required")
   }
 
@@ -91,6 +96,7 @@ const loginUser = asyncHandler(async(req, res)=> {
     throw new ApiError(404, "User does not exist")
   }
   // password check
+  // console.log(user)
 
   const isPasswordValid = await user.isPasswordCorrect(password)
 
