@@ -197,4 +197,91 @@ const refreshAccessToken = asyncHandler(async(req,res)=> {
 
 })
 
-export { registerUser, loginUser, logoutUser, refreshAccessToken };
+const changeCurrentPassword = asyncHandler(async(req, res)=>{
+  const {oldPassword, newPassword} = req.body
+  const user = await User.findById(req.user?._id)
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+
+  if(!isPasswordCorrect){
+    throw new ApiError(401, "Invalid old password")
+  }
+  user.password = password
+  await user.save()
+
+  return res.status(200).json(
+    new ApiResponse(200, {}, "Password change successfully")
+  )
+
+})
+
+const getCurrentUser = asyncHandler(async(req, res)=> {
+  return res.status(200).json(200, req.user,"User fetched successfully")
+})
+
+const updateAccountDetails = asyncHandler(async(req, res)=> {
+  const{username, fullName} = req.body
+  const user  = await User.findByIdAndUpdate(req.user?._id, {
+    $set: {
+      username,
+      fullName: fullName
+    }
+  },
+    {new: true}
+  ).select("-password")
+
+  return res.status(200).json(
+    new ApiResponse(200, user, "Account details updated")
+  )
+})
+
+const updateUserAvatar = asyncHandler(async(req, res)=> {
+  const avatarLocalPath = req.file?.path
+  if(!avatarLocalPath){
+    throw new ApiError(403, "Avatar file is missing")
+  }
+  const avatar = await uploadOnCloudinary(avatarLocalPath)
+
+  if(!avatar?.url){
+    throw new ApiError(403, "Error while uploading Avatar");
+  }
+
+  await User.findByIdAndUpdate(req.user?._id,{
+    $set: {
+      avatar: avatar.url
+    }
+  },{new : true}).select("-password")
+})
+
+const updateUserCoverImage = asyncHandler(async (req, res) => {
+  const coverImageLocalPath = req.file?.path;
+  if (!coverImageLocalPath) {
+    throw new ApiError(403, "Cover Image file is missing");
+  }
+  const coverImage = await uploadOnCloudinary(avatarLocalPath);
+
+  if (!coverImage?.url) {
+    throw new ApiError(403, "Error while uploading cover image");
+  }
+
+  await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        coverImage: coverImage.url
+      },
+    },
+    { new: true }
+  ).select("-password");
+});
+
+export {
+  registerUser,
+  loginUser,
+  logoutUser,
+  refreshAccessToken,
+  changeCurrentPassword,
+  getCurrentUser,
+  updateAccountDetails,
+  updateUserAvatar,
+  updateUserCoverImage,
+};
